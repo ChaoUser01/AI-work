@@ -1,7 +1,6 @@
 # AI-work
 
-A collection of Python-based projects demonstrating key concepts in artificial intelligence, neural networks, natural language processing, and machine learning.
-
+A collection of Python-based projects, as a part of practical use of in-class learned materials.
 ## 📂 Project Structure
 
 - **Manual-Net/**  
@@ -23,4 +22,5 @@ A collection of Python-based projects demonstrating key concepts in artificial i
   A convolutional neural network (CNN) for handwritten digit recognition using PyTorch modules.  
   Typical use-case: MNIST digit classification.  
   Demonstrates defining, training, and evaluating CNNs with a modern deep learning framework.
+
 #Author: Khan Adeeb
