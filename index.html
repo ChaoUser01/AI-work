@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Academia Pilot</title>
+    <style>
+        :root {
+            --bg-color: #121212;
+            --card-color: #1e1e1e;
+            --border-color: #2d2d2d;
+            --text-primary: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            --accent-color: #007bff;
+            --class-color: #2a3a5e;
+            --study-color: #5e4a2a;
+            --practical-color: #2a5e3a;
+            --review-color: #4a2a5e;
+            --other-color: #444;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: auto;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 15px;
+            margin-bottom: 20px;
+        }
+        .header h1 {
+            color: var(--accent-color);
+            margin: 0;
+        }
+        .time-info {
+            text-align: right;
+        }
+        #current-time, #current-date {
+            margin: 0;
+            font-size: 1.2em;
+        }
+        #week-info {
+            color: var(--text-secondary);
+            font-weight: bold;
+        }
+        .dashboard {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 20px;
+        }
+        .card {
+            background-color: var(--card-color);
+            border-radius: 8px;
+            padding: 20px;
+            border: 1px solid var(--border-color);
+        }
+        .up-next h2 {
+            margin-top: 0;
+            color: var(--text-secondary);
+        }
+        #event-title {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--accent-color);
+        }
+        #event-time {
+            font-size: 1.2em;
+            margin: 10px 0;
+        }
+        #event-countdown, #event-location {
+            font-size: 1.2em;
+            color: var(--text-secondary);
+        }
+        .schedule-view h2 {
+            margin-top: 0;
+        }
+        .timeline {
+            position: relative;
+        }
+        .timeline-item {
+            display: flex;
+            margin-bottom: 10px;
+            opacity: 0.5;
+            transition: all 0.3s ease;
+        }
+        .timeline-item.is-current, .timeline-item.is-upcoming {
+            opacity: 1;
+        }
+        .timeline-time {
+            width: 120px;
+            font-weight: bold;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        .timeline-event {
+            flex-grow: 1;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid;
+        }
+        .timeline-item.is-current .timeline-event {
+             box-shadow: 0 0 15px rgba(0, 123, 255, 0.5);
+        }
+        .event-details h4, .event-details p {
+            margin: 0;
+        }
+        .event-details p {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+        }
+        .type-class { background-color: var(--class-color); border-color: #4d88ff; }
+        .type-study { background-color: var(--study-color); border-color: #ffc107; }
+        .type-practical { background-color: var(--practical-color); border-color: #28a745; }
+        .type-review { background-color: var(--review-color); border-color: #a369ff; }
+        .type-other { background-color: var(--other-color); border-color: #6c757d; }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Academia Pilot</h1>
+            <div class="time-info">
+                <h3 id="current-time">12:00:00 PM</h3>
+                <p id="current-date">Monday, September 15</p>
+                <p id="week-info">Calculating...</p>
+            </div>
+        </div>
+
+        <div class="dashboard">
+            <div class="card up-next">
+                <h2>UP NEXT</h2>
+                <h3 id="event-title">Loading...</h3>
+                <p id="event-time">--:-- - --:--</p>
+                <p id="event-countdown">--:--:--</p>
+                <p id="event-location">-</p>
+            </div>
+
+            <div class="card schedule-view">
+                <h2 id="today-schedule-title">Today's Schedule</h2>
+                <div id="timeline-container" class="timeline">
+                    <!-- Schedule will be generated by JavaScript -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // --- CONFIGURATION ---
+        // !!! IMPORTANT: Set the start date of your Week 1 here !!!
+        const SEMESTER_START_DATE = new Date('2025-09-01T00:00:00');
+
+        const schedule = {
+            // Monday
+            1: [
+                { start: "08:00", end: "09:40", title: "Signals and Systems", location: "揽江楼N308", type: "class", week: "all" },
+                { start: "10:10", end: "11:50", title: "Optimization Methods", location: "东阶", type: "class", week: "all" },
+                { start: "13:45", end: "15:25", title: "Electronic Technology Fundamentals", location: "雷丁楼S114", type: "class", week: "all" },
+                { start: "15:55", end: "17:35", title: "Physics (1)", location: "雷丁楼S119", type: "class", week: "all" },
+                { start: "18:45", end: "20:25", title: "Linear Algebra", location: "揽江楼C301", type: "class", week: "all" },
+                { start: "20:30", end: "22:30", title: "Deep Study: Signals & Systems", location: "Home/Library", type: "study", week: "all" },
+                { start: "22:30", end: "00:30", title: "Deep Study: Electronic Tech", location: "Home/Library", type: "study", week: "all" }
+            ],
+            // Tuesday
+            2: [
+                { start: "08:00", end: "10:00", title: "Practical: Data Structures & Algorithms", location: "Home/Library", type: "practical", week: "all" },
+                { start: "10:10", end: "11:50", title: "HSK 4 Tutorial (1)", location: "雷丁楼S119", type: "other", week: "all" },
+                { start: "13:45", end: "15:25", title: "Introduction to Artificial Intelligence", location: "揽江楼C403", type: "class", week: "even" },
+                { start: "13:00", end: "15:30", title: "Deep Study: Physics (1)", location: "Home/Library", type: "study", week: "odd" },
+                { start: "15:55", end: "17:35", title: "Physical Education 3", location: "体育馆北门厅", type: "other", week: "all" },
+                { start: "18:30", end: "21:00", title: "Deep Study: Intro to AI", location: "Home/Library", type: "study", week: "all" },
+                { start: "21:00", end: "23:30", title: "Deep Study: Linear Algebra", location: "Home/Library", type: "study", week: "all" }
+            ],
+            // Wednesday
+            3: [
+                { start: "08:00", end: "10:00", title: "Deep Study: Signals & Systems", location: "Home/Library", type: "study", week: "all" },
+                { start: "10:10", end: "11:50", title: "Optimization Methods", location: "文德S101", type: "class", week: "odd" },
+                { start: "15:55", end: "17:35", title: "Linear Algebra", location: "揽江楼C301", type: "class", week: "even" },
+                { start: "18:45", end: "20:25", title: "Data Structures & Algorithms", location: "揽江楼S206", type: "class", week: "all" },
+                { start: "21:15", end: "00:00", title: "Practical: Data Structures & Algorithms", location: "Home/Library", type: "practical", week: "all" }
+            ],
+            // Thursday
+            4: [
+                { start: "08:00", end: "09:40", title: "Electronic Technology Fundamentals", location: "揽江楼C302", type: "class", week: "all" },
+                { start: "13:45", end: "15:25", title: "Data Structures & Algorithms", location: "雷丁楼S119", type: "class", week: "all" },
+                { start: "15:55", end: "17:35", title: "Physics (1)", location: "揽江楼S207", type: "class", week: "all" },
+                { start: "18:45", end: "21:15", title: "Practical: Data Structures & Algorithms", location: "Home/Library", type: "practical", week: "all" },
+                { start: "21:15", end: "23:15", title: "Review: Optimization Methods", location: "Home/Library", type: "review", week: "all" }
+            ],
+            // Friday
+            5: [
+                { start: "08:00", end: "09:40", title: "China Overview II", location: "滨江BS312", type: "other", week: "all" },
+                { start: "13:45", end: "15:25", title: "Introduction to Artificial Intelligence", location: "雷丁楼S114", type: "class", week: "all" },
+                { start: "15:55", end: "17:35", title: "Signals and Systems", location: "揽江楼N606", type: "class", week: "all" },
+                { start: "18:30", end: "21:00", title: "Deep Study: Intro to AI", location: "Home/Library", type: "study", week: "all" },
+                { start: "21:00", end: "23:30", title: "Review: Linear Algebra", location: "Home/Library", type: "review", week: "all" }
+            ],
+            // Saturday
+            6: [
+                 { start: "09:00", end: "12:00", title: "Practical Deep Dive: Data Structures", location: "Home/Library", type: "practical", week: "all" },
+                 { start: "13:00", end: "16:00", title: "Theory Review: Physics & Electronic Tech", location: "Home/Library", type: "review", week: "all" },
+                 { start: "20:00", end: "23:00", title: "Practical Deep Dive: Intro to AI", location: "Home/Library", type: "practical", week: "all" }
+            ],
+             // Sunday
+            0: [
+                 { start: "10:00", end: "13:00", title: "Problem-Solving Gauntlet", location: "Home/Library", type: "study", week: "all" },
+                 { start: "14:00", end: "17:00", title: "Weak Spot Analysis & Review", location: "Home/Library", type: "review", week: "all" },
+                 { start: "20:00", end: "22:00", title: "Plan for the Week Ahead", location: "Home/Library", type: "other", week: "all" }
+            ]
+        };
+
+        function getWeekInfo() {
+            const now = new Date();
+            const diff = now - SEMESTER_START_DATE;
+            const weekNumber = Math.floor(diff / (1000 * 60 * 60 * 24 * 7)) + 1;
+            const weekType = weekNumber % 2 === 0 ? 'even' : 'odd';
+            return { weekNumber, weekType };
+        }
+
+        function renderSchedule() {
+            const today = new Date().getDay();
+            const { weekType } = getWeekInfo();
+            const container = document.getElementById('timeline-container');
+            container.innerHTML = '';
+            
+            const todaysSchedule = schedule[today]
+                ?.filter(event => event.week === 'all' || event.week === weekType)
+                .sort((a, b) => a.start.localeCompare(b.start));
+
+            if (!todaysSchedule || todaysSchedule.length === 0) {
+                container.innerHTML = '<p>No scheduled events for today. Enjoy your day off!</p>';
+                return;
+            }
+
+            todaysSchedule.forEach(event => {
+                const item = document.createElement('div');
+                item.className = 'timeline-item';
+                item.id = `event-${event.start.replace(':', '')}`;
+                
+                item.innerHTML = `
+                    <div class="timeline-time">${event.start} - ${event.end}</div>
+                    <div class="timeline-event type-${event.type}">
+                        <div class="event-details">
+                            <h4>${event.title}</h4>
+                            <p>${event.location}</p>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(item);
+            });
+        }
+        
+        function updateDashboard() {
+            const now = new Date();
+            const currentTime = now.toLocaleTimeString('en-US');
+            const currentDate = now.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+            
+            document.getElementById('current-time').textContent = currentTime;
+            document.getElementById('current-date').textContent = currentDate;
+            
+            const { weekNumber, weekType } = getWeekInfo();
+            document.getElementById('week-info').textContent = `SEMESTER WEEK ${weekNumber} (${weekType.toUpperCase()})`;
+            document.getElementById('today-schedule-title').textContent = `Today's Schedule (Week ${weekNumber})`;
+            
+            const today = now.getDay();
+            const todaysSchedule = schedule[today]
+                ?.filter(event => event.week === 'all' || event.week === weekType)
+                .sort((a, b) => a.start.localeCompare(b.start));
+            
+            let currentEvent = null;
+            let nextEvent = null;
+
+            if (todaysSchedule) {
+                for (const event of todaysSchedule) {
+                    const [startH, startM] = event.start.split(':');
+                    const [endH, endM] = event.end.split(':');
+                    const startTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), startH, startM);
+                    const endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate(), endH, endM);
+                    
+                    // Handle overnight events
+                    if (endTime < startTime) {
+                        endTime.setDate(endTime.getDate() + 1);
+                    }
+
+                    const eventEl = document.getElementById(`event-${event.start.replace(':', '')}`);
+                    if (eventEl) {
+                        eventEl.classList.remove('is-current', 'is-upcoming');
+                        if (now >= startTime && now < endTime) {
+                            currentEvent = event;
+                            currentEvent.endTime = endTime;
+                            eventEl.classList.add('is-current');
+                        } else if (now < startTime) {
+                            if (!nextEvent) {
+                                nextEvent = event;
+                                nextEvent.startTime = startTime;
+                            }
+                            eventEl.classList.add('is-upcoming');
+                        }
+                    }
+                }
+            }
+            
+            const displayEvent = currentEvent || nextEvent;
+            
+            if (displayEvent) {
+                document.getElementById('event-title').textContent = displayEvent.title;
+                document.getElementById('event-time').textContent = `${displayEvent.start} - ${displayEvent.end}`;
+                document.getElementById('event-location').textContent = `📍 ${displayEvent.location}`;
+                
+                let diff, prefix;
+                if (currentEvent) {
+                    diff = currentEvent.endTime - now;
+                    prefix = 'Ends in: ';
+                } else {
+                    diff = nextEvent.startTime - now;
+                    prefix = 'Starts in: ';
+                }
+                
+                const hours = Math.floor(diff / (1000 * 60 * 60));
+                const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+                document.getElementById('event-countdown').textContent = `${prefix}${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            } else {
+                document.getElementById('event-title').textContent = 'All Done for Today!';
+                document.getElementById('event-time').textContent = 'Enjoy your free time.';
+                document.getElementById('event-countdown').textContent = '🎉';
+                document.getElementById('event-location').textContent = '';
+            }
+        }
+
+        // Initial setup
+        renderSchedule();
+        updateDashboard();
+
+        // Update every second
+        setInterval(updateDashboard, 1000);
+    </script>
+</body>
+</html>
